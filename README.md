@@ -69,12 +69,15 @@ npm run build
 脚本行为：
 
 - 默认安装目录为 `$HOME/zenmind`
-- 若目录不存在则 clone `https://github.com/linlay/zenmind.git`
+- 若目录不存在则 shallow clone `https://github.com/linlay/zenmind.git`
 - 若目录已存在则执行 `git pull --ff-only`
-- 然后转交到正式安装脚本：
+- 然后先执行环境检查，再转交到正式安装脚本：
   - `./setup-mac.sh`
   - `./setup-linux.sh`
   - `./setup-win-wsl.sh`
+- 默认读取 `https://www.zenmind.cc/install/manifest.json`
+- 若设置 `ZENMIND_RELEASE_LINE=vX.Y`，则改用 `/install/releases/vX.Y/release-manifest.json`
+- 若设置 `ZENMIND_MANIFEST_URL`，则直接使用该 manifest URL
 
 ## 3. 配置说明
 
@@ -122,7 +125,9 @@ npm run build
 - `80` 全量跳转到 `https://www.zenmind.cc`
 - `443` 承载静态站
 - `/assets/*` 长缓存
-- `/install/*` 不缓存，直接输出 shell 脚本
+- `/install/*.sh` 不缓存，直接输出 shell 脚本
+- `/install/manifest.json` 直出稳定版 manifest
+- `/install/releases/*` 直出 release line 与 patch 产物
 - `/api/*` 返回 `404`
 - 其他路径使用 SPA 回退到 `index.html`
 
@@ -153,10 +158,13 @@ bash -n public/install/win-wsl.sh
 - `/install/*.sh` 无法访问：
   - 检查构建产物中是否已包含 `dist/install/`
   - 检查 Nginx 是否对 `/install/` 单独放行
+- `/install/manifest.json` 或 `/install/releases/*` 无法访问：
+  - 检查宿主机是否已提供 `/docker/zenmind-releases`
+  - 检查宿主机 Nginx 是否对这些路径做了直连映射，而不是只反代到网站容器
 - 官网访问到 `/api/*`：
   - 这是预期行为，根域名不承载 API
-- Android / iOS 按钮还是占位：
-  - 当前属于未补真实下载链接的正常状态
+- Android / iOS 仍在次级区：
+  - 这是当前预期，主入口以 macOS、Linux、Windows (WSL) 一键安装为主
 - 样式或路由变更没有生效：
   - 重新执行 `npm run build`
   - 检查服务器是否部署了最新 `dist/`

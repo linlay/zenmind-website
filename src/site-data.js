@@ -36,9 +36,9 @@ export const languages = {
     switchLabel: 'EN',
     brandMark: 'ZenMind',
     seo: {
-      title: 'ZenMind | 面向个人的智能 AI 助理生态',
+      title: 'ZenMind | 面向个人的本地优先 AI 工作台',
       description:
-        'ZenMind 是一个面向个人的高端 AI 助理生态，覆盖服务端、App 端与网站端体验，强调本地优先、统一入口与多服务协作。',
+        'ZenMind 是面向个人的本地优先 AI 工作台，用一个入口管理安装、服务与配置。',
       url: siteUrl,
     },
     nav: {
@@ -50,18 +50,18 @@ export const languages = {
       github: 'GitHub',
     },
     home: {
-      eyebrow: 'Personal AI Agent Platform',
-      headline: '你的 AI。\n你的栈。\n你的设备。',
+      eyebrow: 'Local-first AI Workspace',
+      headline: '本地优先的个人 AI 工作台',
       subtitle:
-        'ZenMind 把 Server、App 与 Web 串成一体，用克制而强大的方式，把个人智能助理真正带到你的设备和工作流里。',
+        '用一个入口管理安装、服务与配置，适合在 macOS、Linux 和 WSL 上快速部署 ZenMind。',
       typewriter: [
-        '为个人用户而生',
-        '本地优先的统一入口',
-        '多服务协作的 AI 助理',
+        '统一的安装入口',
+        'release 版本一键部署',
+        '适合个人环境与小型服务器',
       ],
       primaryCta: '立即安装',
       secondaryCta: '查看 GitHub',
-      installTitle: '一行命令，开始部署。',
+      installTitle: '一行命令，安装最新稳定版。',
       installCards: [
         {
           name: 'macOS',
@@ -131,16 +131,17 @@ export const languages = {
     download: {
       title: '下载与安装',
       intro:
-        '官网当前以桌面脚本安装为主，移动端预留标准分发入口。所有桌面脚本都会 clone 或更新 GitHub 仓库，然后调用官方 setup 脚本。',
+        '官网当前提供 macOS、Linux 和 Windows (WSL) 的一键安装。脚本会先检查环境，再通过 release manifest 安装最新稳定版；如需锁定功能版本线，可设置 ZENMIND_RELEASE_LINE=vX.Y。',
       sections: [
         {
           title: 'macOS',
-          subtitle: '一键安装',
+          subtitle: '默认安装最新稳定版',
           command: installCommands.mac,
           notes: [
-            '默认安装到 $HOME/zenmind',
-            '首次执行会 clone 仓库；后续执行会自动 pull',
-            '最终调用 ./setup-mac.sh',
+            '需要 bash、curl、git 和可用的 Docker Compose 运行时',
+            '脚本会先执行 ./setup-mac.sh --action check，再进入 release 安装',
+            '默认仍按当前 setup 能力推荐 Docker Desktop；Podman 作为高级兼容选项',
+            '如需锁定功能线，可先导出 ZENMIND_RELEASE_LINE=vX.Y',
           ],
         },
         {
@@ -148,41 +149,43 @@ export const languages = {
           subtitle: '服务器与桌面 Linux',
           command: installCommands.linux,
           notes: [
-            '适合 Linux 主机与云服务器',
-            '默认安装到 $HOME/zenmind',
-            '最终调用 ./setup-linux.sh',
+            '默认推荐 Docker Engine + docker compose',
+            'Podman 仅在 docker compose 可用时作为兼容方案',
+            '脚本会先执行 ./setup-linux.sh --action check，再进入 release 安装',
+            '如需锁定功能线，可先导出 ZENMIND_RELEASE_LINE=vX.Y',
           ],
         },
         {
           title: 'Windows via WSL',
-          subtitle: '请先进入 WSL Shell',
+          subtitle: '请先进入 WSL Linux Shell',
           command: installCommands.wsl,
           notes: [
             '必须在 WSL 环境中执行',
-            '当前不支持原生 Windows 主系统脚本安装',
-            '最终调用 ./setup-win-wsl.sh',
+            '默认推荐在 WSL 内安装 Docker Engine + docker compose',
+            '不建议把 Docker Desktop 作为默认运行时',
+            '脚本会先执行 ./setup-win-wsl.sh --action check，再进入 release 安装',
           ],
         },
       ],
-      mobileTitle: '移动端分发',
+      mobileTitle: '移动端分发（后续）',
       mobileCards: [
         {
           platform: 'Android APK',
           hrefKey: 'android',
-          status: '即将提供',
-          detail: '页面已预留直接下载位，等真实 APK 地址确定后可立即替换。',
+          status: '后续提供',
+          detail: '桌面与服务器安装是当前主入口，APK 分发位保留为后续补充。',
           cta: 'Coming Soon',
         },
         {
           platform: 'iOS App Store',
           hrefKey: 'ios',
-          status: '等待上架链接',
-          detail: 'iOS 通过应用市场分发，官网只提供官方入口，不提供侧载说明。',
+          status: '等待商店链接',
+          detail: 'iOS 仍以应用市场分发为主，官网后续只提供官方入口。',
           cta: 'App Store Placeholder',
         },
       ],
       sourceTitle: '源码入口',
-      sourceBody: '如果你更倾向于手动查看部署链路，可以直接访问 GitHub 仓库。',
+      sourceBody: '如果你想先查看 setup、manifest 和 release 生成链路，可以直接访问 GitHub 仓库。',
     },
     architecture: {
       title: '架构概览',
@@ -221,12 +224,17 @@ export const languages = {
         {
           question: '现在可以直接用单个 shell 脚本完成安装吗？',
           answer:
-            '可以通过官网 bootstrap 脚本一键进入安装流程，但它的本质是先 clone 或更新 GitHub 仓库，再调用仓库里的正式 setup 脚本。',
+            '可以。官网 bootstrap 脚本会先做环境检查，再通过 release manifest 进入正式安装流程；它仍然会浅 clone 或更新官方仓库，然后调用 setup 脚本。',
         },
         {
           question: 'Windows 为什么需要 WSL？',
           answer:
             '当前 ZenMind 的桌面部署链路已明确以 macOS、Linux 与 Windows 下的 WSL 为基线；原生 Windows 主系统不在当前支持范围内。',
+        },
+        {
+          question: '为什么页面展示的是 vX.Y，实际安装结果是 vX.Y.Z？',
+          answer:
+            'vX.Y 代表用户感知的功能版本线，vX.Y.Z 代表该版本线下的具体修复版。默认安装会跟随最新稳定 patch；如果手动指定 ZENMIND_RELEASE_LINE=vX.Y，也会自动落到该线当前最新修复版。',
         },
         {
           question: 'Android 和 iOS 为什么还没有直接下载？',
@@ -262,9 +270,9 @@ export const languages = {
     switchLabel: '中',
     brandMark: 'ZenMind',
     seo: {
-      title: 'ZenMind | A Personal AI Assistant Ecosystem',
+      title: 'ZenMind | A Local-first AI Workspace',
       description:
-        'ZenMind is a premium personal AI assistant ecosystem spanning server, app, and web experiences with a local-first architecture.',
+        'ZenMind is a local-first AI workspace for personal environments, with one entry point for install, services, and configuration.',
       url: `${siteUrl}/en`,
     },
     nav: {
@@ -276,18 +284,18 @@ export const languages = {
       github: 'GitHub',
     },
     home: {
-      eyebrow: 'Personal AI Agent Platform',
-      headline: 'Your AI.\nYour Stack.\nYour Device.',
+      eyebrow: 'Local-first AI Workspace',
+      headline: 'A local-first AI workspace',
       subtitle:
-        'ZenMind brings server, app, and web into one refined ecosystem — a truly personal AI assistant that lives on your device.',
+        'Use one entry point for install, services, and configuration across macOS, Linux, and WSL.',
       typewriter: [
-        'Designed for personal AI',
-        'A local-first unified entry point',
-        'Multi-service orchestration with calm polish',
+        'One install entry point',
+        'Release-first deployment flow',
+        'Built for personal setups and small servers',
       ],
       primaryCta: 'Install Now',
       secondaryCta: 'View on GitHub',
-      installTitle: 'One command to get started.',
+      installTitle: 'One command for the latest stable release.',
       installCards: [
         {
           name: 'macOS',
@@ -357,16 +365,17 @@ export const languages = {
     download: {
       title: 'Download & Install',
       intro:
-        'The public website focuses on desktop bootstrap scripts today, with proper placeholders for mobile distribution. Every desktop script clones or updates the GitHub repo before handing off to the official setup script.',
+        'The website now focuses on one-line install flows for macOS, Linux, and Windows (WSL). Each script checks the environment first, then installs the latest stable release through a release manifest. To stay on a specific release line, set ZENMIND_RELEASE_LINE=vX.Y.',
       sections: [
         {
           title: 'macOS',
-          subtitle: 'One-line bootstrap',
+          subtitle: 'Latest stable by default',
           command: installCommands.mac,
           notes: [
-            'Installs into $HOME/zenmind by default',
-            'Clones on first run and pulls on later runs',
-            'Hands off to ./setup-mac.sh',
+            'Requires bash, curl, git, and a working Docker Compose runtime',
+            'Runs ./setup-mac.sh --action check before release install',
+            'Docker Desktop remains the default recommendation for the current setup flow',
+            'Set ZENMIND_RELEASE_LINE=vX.Y if you want to stay on one feature line',
           ],
         },
         {
@@ -374,41 +383,43 @@ export const languages = {
           subtitle: 'Desktop and server environments',
           command: installCommands.linux,
           notes: [
-            'Suitable for Linux workstations and servers',
-            'Installs into $HOME/zenmind by default',
-            'Hands off to ./setup-linux.sh',
+            'Docker Engine + docker compose is the default recommendation',
+            'Podman is only recommended when docker compose compatibility is already working',
+            'Runs ./setup-linux.sh --action check before release install',
+            'Set ZENMIND_RELEASE_LINE=vX.Y if you want to stay on one feature line',
           ],
         },
         {
           title: 'Windows via WSL',
-          subtitle: 'Enter WSL first',
+          subtitle: 'Open a WSL Linux shell first',
           command: installCommands.wsl,
           notes: [
             'Must run inside a WSL Linux shell',
-            'Native Windows bootstrap is intentionally unsupported',
-            'Hands off to ./setup-win-wsl.sh',
+            'Prefer Docker Engine + docker compose inside WSL',
+            'Docker Desktop is not the default recommendation here',
+            'Runs ./setup-win-wsl.sh --action check before release install',
           ],
         },
       ],
-      mobileTitle: 'Mobile distribution',
+      mobileTitle: 'Mobile distribution (later)',
       mobileCards: [
         {
           platform: 'Android APK',
           hrefKey: 'android',
-          status: 'Coming soon',
-          detail: 'The direct APK slot is ready as soon as the real package URL is available.',
+          status: 'Later',
+          detail: 'Desktop and server install paths come first. The APK slot remains reserved for a future public package.',
           cta: 'Coming Soon',
         },
         {
           platform: 'iOS App Store',
           hrefKey: 'ios',
           status: 'Awaiting store link',
-          detail: 'iOS stays marketplace-first. The website only exposes the official store route.',
+          detail: 'iOS remains marketplace-first. The website will only expose the official store route.',
           cta: 'App Store Placeholder',
         },
       ],
       sourceTitle: 'Source code',
-      sourceBody: 'If you prefer to inspect the deployment flow yourself, go directly to the GitHub repository.',
+      sourceBody: 'If you want to inspect setup, manifest, and release generation directly, go to the GitHub repository.',
     },
     architecture: {
       title: 'Architecture',
@@ -447,12 +458,17 @@ export const languages = {
         {
           question: 'Is this really a one-line install?',
           answer:
-            'Yes, from the website perspective. The bootstrap script still clones or updates the official GitHub repository before it delegates to the real setup script.',
+            'Yes from the website perspective. The bootstrap script still shallow-clones or updates the official repository, but it now runs an environment check first and then installs through the release manifest flow.',
         },
         {
           question: 'Why does Windows rely on WSL?',
           answer:
             'The current ZenMind deployment baseline supports macOS, Linux, and Windows through WSL. Native Windows setup is outside the current scope.',
+        },
+        {
+          question: 'Why do I see vX.Y while the actual install is vX.Y.Z?',
+          answer:
+            'vX.Y is the user-facing release line. vX.Y.Z is the exact patch shipped underneath it. Stable install follows the newest patch automatically, and ZENMIND_RELEASE_LINE=vX.Y stays on the newest patch inside that line.',
         },
         {
           question: 'Why are Android and iOS still placeholders?',
