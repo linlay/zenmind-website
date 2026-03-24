@@ -174,6 +174,42 @@ nginx -t
 - `dist/404.html` 与 `dist/50x.html` 已生成
 - 中英文路由在刷新场景下可正常访问
 
+### Docker Compose 部署
+
+项目现在也支持容器化部署，适合挂在宿主机 Nginx 后面。
+
+新增文件：
+
+- `Dockerfile`
+- `compose.yml`
+- `deploy/nginx/container.conf`
+- `deploy/nginx/zenmind.cc.compose-proxy.conf`
+
+推荐服务器目录：
+
+```bash
+/docker/zenmind-website
+```
+
+启动方式：
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+当前约定：
+
+- 容器内由 Nginx 提供静态站
+- 宿主机仅监听本机回环地址：
+  - `127.0.0.1:11940 -> container:80`
+- 宿主机现有 Nginx 反代到：
+  - `http://127.0.0.1:11940`
+
+宿主机 Nginx 若采用反代版本，可参考：
+
+- `deploy/nginx/zenmind.cc.compose-proxy.conf`
+
 ## 6. FAQ
 
 ### 这是内容站还是产品站？
