@@ -54,20 +54,32 @@ sync_repo() {
 run_setup() {
   local script_path="$INSTALL_DIR/$TARGET_SCRIPT"
   local manifest_url
+  local state_file
   manifest_url="$(resolve_manifest_url)"
+  state_file="$INSTALL_DIR/.zenmind/install-state.json"
 
   [[ -f "$script_path" ]] || fail "missing $TARGET_SCRIPT in $INSTALL_DIR"
 
   if [[ "$DRY_RUN" == "1" ]]; then
     log "dry-run: would execute $script_path --action check"
-    log "dry-run: would execute $script_path --action install --release --manifest $manifest_url $*"
+    if [[ -f "$state_file" ]]; then
+      log "dry-run: existing installation detected via $state_file"
+      log "dry-run: would execute $script_path --action upgrade --release --manifest $manifest_url $*"
+    else
+      log "dry-run: no install state found at $state_file"
+      log "dry-run: would execute $script_path --action setup-guide --release --manifest $manifest_url $*"
+    fi
     return
   fi
 
   log "running environment check"
   "$script_path" --action check
-  log "installing release from $manifest_url"
-  exec "$script_path" --action install --release --manifest "$manifest_url" "$@"
+  if [[ -f "$state_file" ]]; then
+    log "existing installation detected, upgrading from $manifest_url"
+    exec "$script_path" --action upgrade --release --manifest "$manifest_url" "$@"
+  fi
+  log "starting guided release install from $manifest_url"
+  exec "$script_path" --action setup-guide --release --manifest "$manifest_url" "$@"
 }
 
 main() {

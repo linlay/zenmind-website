@@ -131,7 +131,7 @@ export const languages = {
     download: {
       title: '下载与安装',
       intro:
-        '官网当前提供 macOS、Linux 和 Windows (WSL) 的一键安装。脚本会先检查环境，再通过 release manifest 安装最新稳定版；如需锁定功能版本线，可设置 ZENMIND_RELEASE_LINE=vX.Y。',
+        '官网当前提供 macOS、Linux 和 Windows (WSL) 的一键安装。同一条命令既用于首次安装，也用于后续升级：首次安装会自动打开 Config Studio 配置向导，已安装环境则会直接走 release 升级；如需锁定功能版本线，可设置 ZENMIND_RELEASE_LINE=vX.Y。',
       sections: [
         {
           title: 'macOS',
@@ -139,8 +139,10 @@ export const languages = {
           command: installCommands.mac,
           notes: [
             '需要 bash、curl、git 和可用的 Docker Compose 运行时',
-            '脚本会先执行 ./setup-mac.sh --action check，再进入 release 安装',
+            '脚本会先执行 ./setup-mac.sh --action check，再自动进入“首次安装向导”或“升级”分支',
+            '首次安装会自动打开本地 Config Studio，保存 zenmind.profile.local.json 后继续启动服务',
             '默认仍按当前 setup 能力推荐 Docker Desktop；Podman 作为高级兼容选项',
+            '重新运行同一条命令即可升级到最新稳定版并保留现有配置和数据',
             '如需锁定功能线，可先导出 ZENMIND_RELEASE_LINE=vX.Y',
           ],
         },
@@ -151,7 +153,9 @@ export const languages = {
           notes: [
             '默认推荐 Docker Engine + docker compose',
             'Podman 仅在 docker compose 可用时作为兼容方案',
-            '脚本会先执行 ./setup-linux.sh --action check，再进入 release 安装',
+            '脚本会先执行 ./setup-linux.sh --action check，再自动进入“首次安装向导”或“升级”分支',
+            '首次安装会打开 Config Studio；若浏览器无法自动弹出，可按终端提示手动打开本地 HTML',
+            '重新运行同一条命令即可升级到最新稳定版并保留现有配置和数据',
             '如需锁定功能线，可先导出 ZENMIND_RELEASE_LINE=vX.Y',
           ],
         },
@@ -163,7 +167,9 @@ export const languages = {
             '必须在 WSL 环境中执行',
             '默认推荐在 WSL 内安装 Docker Engine + docker compose',
             '不建议把 Docker Desktop 作为默认运行时',
-            '脚本会先执行 ./setup-win-wsl.sh --action check，再进入 release 安装',
+            '脚本会先执行 ./setup-win-wsl.sh --action check，再自动进入“首次安装向导”或“升级”分支',
+            '首次安装优先尝试用 wslview 打开 Config Studio，失败时会回退到 explorer.exe 或终端提示',
+            '重新运行同一条命令即可升级到最新稳定版并保留现有配置和数据',
           ],
         },
       ],
@@ -224,7 +230,7 @@ export const languages = {
         {
           question: '现在可以直接用单个 shell 脚本完成安装吗？',
           answer:
-            '可以。官网 bootstrap 脚本会先做环境检查，再通过 release manifest 进入正式安装流程；它仍然会浅 clone 或更新官方仓库，然后调用 setup 脚本。',
+            '可以。官网 bootstrap 脚本会先做环境检查，再根据本地 install-state 判断是“首次安装”还是“升级”；首次安装会自动打开 Config Studio，已安装环境会直接进入 release 升级。',
         },
         {
           question: 'Windows 为什么需要 WSL？',
@@ -235,6 +241,11 @@ export const languages = {
           question: '为什么页面展示的是 vX.Y，实际安装结果是 vX.Y.Z？',
           answer:
             'vX.Y 代表用户感知的功能版本线，vX.Y.Z 代表该版本线下的具体修复版。默认安装会跟随最新稳定 patch；如果手动指定 ZENMIND_RELEASE_LINE=vX.Y，也会自动落到该线当前最新修复版。',
+        },
+        {
+          question: '安装时如果 Docker 没启动、端口被占用，或者 WSL 没能自动打开浏览器怎么办？',
+          answer:
+            '安装脚本会先做环境检查并在终端给出提示。常见处理方式是先启动 Docker / docker compose、释放 11945/11946/11947/11950 等默认端口后重试；如果浏览器没有自动打开，可以按终端提示手动打开本地 Config Studio HTML 并保存配置文件。',
         },
         {
           question: 'Android 和 iOS 为什么还没有直接下载？',
@@ -365,7 +376,7 @@ export const languages = {
     download: {
       title: 'Download & Install',
       intro:
-        'The website now focuses on one-line install flows for macOS, Linux, and Windows (WSL). Each script checks the environment first, then installs the latest stable release through a release manifest. To stay on a specific release line, set ZENMIND_RELEASE_LINE=vX.Y.',
+        'The website now focuses on one-line install flows for macOS, Linux, and Windows (WSL). The same command is used for first-time install and later upgrades: a fresh install opens Config Studio automatically, while an existing install goes straight into the release upgrade flow. To stay on a specific release line, set ZENMIND_RELEASE_LINE=vX.Y.',
       sections: [
         {
           title: 'macOS',
@@ -373,8 +384,10 @@ export const languages = {
           command: installCommands.mac,
           notes: [
             'Requires bash, curl, git, and a working Docker Compose runtime',
-            'Runs ./setup-mac.sh --action check before release install',
+            'Runs ./setup-mac.sh --action check before choosing guided install or upgrade',
+            'A fresh install opens local Config Studio and continues after you save zenmind.profile.local.json',
             'Docker Desktop remains the default recommendation for the current setup flow',
+            'Run the same command again later to upgrade while keeping your config and data',
             'Set ZENMIND_RELEASE_LINE=vX.Y if you want to stay on one feature line',
           ],
         },
@@ -385,7 +398,9 @@ export const languages = {
           notes: [
             'Docker Engine + docker compose is the default recommendation',
             'Podman is only recommended when docker compose compatibility is already working',
-            'Runs ./setup-linux.sh --action check before release install',
+            'Runs ./setup-linux.sh --action check before choosing guided install or upgrade',
+            'A fresh install opens Config Studio; if that fails, follow the terminal hint and open the local HTML manually',
+            'Run the same command again later to upgrade while keeping your config and data',
             'Set ZENMIND_RELEASE_LINE=vX.Y if you want to stay on one feature line',
           ],
         },
@@ -397,7 +412,9 @@ export const languages = {
             'Must run inside a WSL Linux shell',
             'Prefer Docker Engine + docker compose inside WSL',
             'Docker Desktop is not the default recommendation here',
-            'Runs ./setup-win-wsl.sh --action check before release install',
+            'Runs ./setup-win-wsl.sh --action check before choosing guided install or upgrade',
+            'Fresh install prefers wslview for Config Studio and falls back to explorer.exe or terminal guidance',
+            'Run the same command again later to upgrade while keeping your config and data',
           ],
         },
       ],
@@ -458,7 +475,7 @@ export const languages = {
         {
           question: 'Is this really a one-line install?',
           answer:
-            'Yes from the website perspective. The bootstrap script still shallow-clones or updates the official repository, but it now runs an environment check first and then installs through the release manifest flow.',
+            'Yes from the website perspective. The bootstrap script still shallow-clones or updates the official repository, but it now runs an environment check first, then decides between first-time guided install and release upgrade by checking the local install state.',
         },
         {
           question: 'Why does Windows rely on WSL?',
@@ -469,6 +486,11 @@ export const languages = {
           question: 'Why do I see vX.Y while the actual install is vX.Y.Z?',
           answer:
             'vX.Y is the user-facing release line. vX.Y.Z is the exact patch shipped underneath it. Stable install follows the newest patch automatically, and ZENMIND_RELEASE_LINE=vX.Y stays on the newest patch inside that line.',
+        },
+        {
+          question: 'What if Docker is not running, ports are already in use, or WSL did not open the browser?',
+          answer:
+            'The installer prints environment-check feedback in the terminal first. In practice that usually means starting Docker or docker compose, freeing the default ports such as 11945/11946/11947/11950, and reopening the local Config Studio HTML manually if the browser did not launch.',
         },
         {
           question: 'Why are Android and iOS still placeholders?',
