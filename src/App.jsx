@@ -1,66 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
-import { downloadLinks, githubUrl, languages, routeMap, siteUrl } from './site-data';
+import { externalLinks, githubUrl, installEntries, languages, routeMap, siteUrl } from './site-data';
 
-const pageOrder = ['home', 'download', 'architecture', 'faq', 'privacy'];
-
-/* ── Hooks ── */
-
-function useTypewriter(phrases) {
-  const [index, setIndex] = useState(0);
-  const [display, setDisplay] = useState('');
-  const [deleting, setDeleting] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const applyPreference = () => setReducedMotion(media.matches);
-
-    applyPreference();
-    media.addEventListener('change', applyPreference);
-    return () => media.removeEventListener('change', applyPreference);
-  }, []);
-
-  useEffect(() => {
-    if (!phrases.length) {
-      return undefined;
-    }
-
-    if (reducedMotion) {
-      setDisplay(phrases[0]);
-      return undefined;
-    }
-
-    const current = phrases[index % phrases.length];
-    const doneTyping = display === current;
-    const doneDeleting = display.length === 0;
-    const delay = deleting ? 42 : doneTyping ? 1200 : 75;
-
-    const timer = window.setTimeout(() => {
-      if (!deleting && !doneTyping) {
-        setDisplay(current.slice(0, display.length + 1));
-        return;
-      }
-
-      if (!deleting && doneTyping) {
-        setDeleting(true);
-        return;
-      }
-
-      if (deleting && !doneDeleting) {
-        setDisplay(current.slice(0, display.length - 1));
-        return;
-      }
-
-      setDeleting(false);
-      setIndex((value) => (value + 1) % phrases.length);
-    }, delay);
-
-    return () => window.clearTimeout(timer);
-  }, [deleting, display, index, phrases, reducedMotion]);
-
-  return display;
-}
+const pageOrder = ['home', 'download', 'faq', 'privacy'];
 
 function useRevealOnScroll() {
   useEffect(() => {
@@ -98,7 +40,7 @@ function useCopyToClipboard() {
 
   const copy = useCallback(async (text) => {
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
+      if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
       } else {
         const textarea = document.createElement('textarea');
@@ -110,8 +52,9 @@ function useCopyToClipboard() {
         document.execCommand('copy');
         document.body.removeChild(textarea);
       }
+
       setCopiedText(text);
-      setTimeout(() => setCopiedText(null), 2000);
+      window.setTimeout(() => setCopiedText(null), 1800);
     } catch {
       setCopiedText(null);
     }
@@ -119,8 +62,6 @@ function useCopyToClipboard() {
 
   return { copiedText, copy };
 }
-
-/* ── Utility ── */
 
 function pathFor(lang, key) {
   return routeMap[lang][key];
@@ -159,234 +100,117 @@ function usePageMeta(lang, key) {
   }, [key, lang]);
 }
 
-/* ── Inline SVG Icons ── */
-
 function PlatformIcon({ platform }) {
   const icons = {
     mac: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2Z" />
-        <path d="M14.5 8.5c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5" />
-        <path d="M15.5 8.5c-1.5 0-2.5 1-3.5 1s-2-1-3.5-1C7 8.5 5.5 10 5.5 12.5c0 3.5 2.5 6 4 6 1 0 1.5-.5 2.5-.5s1.5.5 2.5.5c1.5 0 4-2.5 4-6 0-2.5-1.5-4-3-4Z" />
+        <path d="M14.2 8.2c-.7 0-1.3-.6-1.3-1.3s.6-1.3 1.3-1.3" />
+        <path d="M15.4 9c-1.1 0-2 .8-2.7.8S11 9 9.9 9C8 9 6.6 10.7 6.6 12.8c0 3 2.1 5.6 3.7 5.6.8 0 1.4-.4 2.4-.4s1.6.4 2.4.4c1.6 0 3.7-2.6 3.7-5.6 0-2.1-1.4-3.8-3.4-3.8Z" />
       </svg>
     ),
     linux: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2Z" />
-        <path d="M12 6v4l2 2" />
-        <path d="M8 18c0-2 1.5-3 4-3s4 1 4 3" />
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
         <circle cx="12" cy="10" r="3" />
+        <path d="M8 18c0-2 1.7-3.3 4-3.3S16 16 16 18" />
+        <path d="M12 7v1.5" />
       </svg>
     ),
     windows: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2Z" />
-        <rect x="7" y="7" width="4" height="4" rx="0.5" />
-        <rect x="13" y="7" width="4" height="4" rx="0.5" />
-        <rect x="7" y="13" width="4" height="4" rx="0.5" />
-        <rect x="13" y="13" width="4" height="4" rx="0.5" />
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 5.5 10.5 4v7H3v-5.5Z" />
+        <path d="M13.5 3.6 21 2.5V11h-7.5V3.6Z" />
+        <path d="M3 13h7.5v7L3 18.5V13Z" />
+        <path d="M13.5 13H21v8.5L13.5 20V13Z" />
       </svg>
     ),
   };
 
-  return <div className="card-icon">{icons[platform] || null}</div>;
+  return <div className="card-icon">{icons[platform]}</div>;
 }
 
-function BentoIcon({ type }) {
+function FeatureIcon({ type }) {
   const icons = {
-    agent: (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="6" y="6" width="28" height="28" rx="6" />
-        <circle cx="20" cy="16" r="4" />
-        <path d="M12 30c0-4.418 3.582-8 8-8s8 3.582 8 8" />
+    assistant: (
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="8" y="8" width="24" height="24" rx="8" />
+        <circle cx="20" cy="18" r="4" />
+        <path d="M14 28c1.6-3.3 4.3-5 6-5s4.4 1.7 6 5" />
       </svg>
     ),
-    terminal: (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="8" width="32" height="24" rx="4" />
-        <polyline points="12,16 18,20 12,24" />
-        <line x1="22" y1="24" x2="28" y2="24" />
+    privacy: (
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 4 6 10v10c0 9.3 6 16 14 18 8-2 14-8.7 14-18V10L20 4Z" />
+        <path d="M15 20l3 3 7-7" />
       </svg>
     ),
-    voice: (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="15" y="6" width="10" height="18" rx="5" />
-        <path d="M10 20a10 10 0 0020 0" />
-        <line x1="20" y1="30" x2="20" y2="36" />
-      </svg>
-    ),
-    gateway: (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="20" cy="20" r="14" />
-        <line x1="6" y1="20" x2="34" y2="20" />
-        <line x1="20" y1="6" x2="20" y2="34" />
-        <path d="M10 10l20 20M30 10L10 30" opacity="0.4" />
-      </svg>
-    ),
-    mcp: (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="6" y="6" width="12" height="12" rx="3" />
-        <rect x="22" y="6" width="12" height="12" rx="3" />
-        <rect x="6" y="22" width="12" height="12" rx="3" />
-        <rect x="22" y="22" width="12" height="12" rx="3" />
-      </svg>
-    ),
-    web: (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="20" cy="20" r="14" />
-        <ellipse cx="20" cy="20" rx="6" ry="14" />
-        <line x1="6" y1="20" x2="34" y2="20" />
+    workflow: (
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 12h10" />
+        <path d="M22 12h10" />
+        <path d="M18 8l4 4-4 4" />
+        <rect x="8" y="22" width="10" height="10" rx="3" />
+        <rect x="22" y="22" width="10" height="10" rx="3" />
+        <path d="M18 27h4" />
       </svg>
     ),
   };
 
-  return <div className="bento-icon">{icons[type] || null}</div>;
+  return <div className="feature-icon">{icons[type]}</div>;
 }
 
-/* ── Small Components ── */
-
-function CopyButton({ text }) {
+function CopyButton({ text, lang }) {
   const { copiedText, copy } = useCopyToClipboard();
+  const copyText = languages[lang].shared;
   const isCopied = copiedText === text;
 
   return (
     <button
       className={`copy-btn${isCopied ? ' is-copied' : ''}`}
-      onClick={() => copy(text)}
       type="button"
-      aria-label={isCopied ? 'Copied' : 'Copy to clipboard'}
+      aria-label={isCopied ? copyText.copiedLabel : copyText.copyLabel}
+      onClick={() => copy(text)}
     >
-      {isCopied ? (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      ) : (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-        </svg>
-      )}
+      {isCopied ? copyText.copiedLabel : copyText.copyLabel}
     </button>
   );
 }
 
-function MagneticButton({ href, label, variant = 'primary', external = false }) {
-  const [style, setStyle] = useState({});
+function CodeBlock({ children, copyText, lang }) {
+  return (
+    <div className="code-shell">
+      <code>{children}</code>
+      <CopyButton text={copyText} lang={lang} />
+    </div>
+  );
+}
 
-  function handleMove(event) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const offsetX = (event.clientX - rect.left - rect.width / 2) / 10;
-    const offsetY = (event.clientY - rect.top - rect.height / 2) / 10;
-    setStyle({ transform: `translate(${offsetX}px, ${offsetY}px)` });
-  }
-
-  function reset() {
-    setStyle({});
-  }
-
+function ButtonLink({ href, label, variant = 'primary', external = false }) {
   const className = `button button-${variant}`;
 
   if (external) {
     return (
-      <a
-        className={className}
-        href={href}
-        onMouseMove={handleMove}
-        onMouseLeave={reset}
-        rel="noreferrer"
-        style={style}
-        target="_blank"
-      >
-        <span>{label}</span>
+      <a className={className} href={href} rel="noreferrer" target="_blank">
+        {label}
       </a>
     );
   }
 
   return (
-    <Link
-      className={className}
-      onMouseMove={handleMove}
-      onMouseLeave={reset}
-      style={style}
-      to={href}
-    >
-      <span>{label}</span>
+    <Link className={className} to={href}>
+      {label}
     </Link>
-  );
-}
-
-function CodeBlock({ children, copyText }) {
-  return (
-    <div className="code-shell">
-      <span className="code-shell-dot" />
-      <span className="code-shell-dot" />
-      <span className="code-shell-dot" />
-      <code>{children}</code>
-      {copyText && <CopyButton text={copyText} />}
-    </div>
   );
 }
 
 function LanguageSwitch({ lang, pageKey }) {
   return (
-    <NavLink
-      className="language-switch"
-      to={alternatePath(lang, pageKey)}
-    >
+    <NavLink className="language-switch" to={alternatePath(lang, pageKey)}>
       {languages[lang].switchLabel}
     </NavLink>
   );
 }
-
-/* ── Hamburger Menu ── */
-
-function HamburgerMenu({ lang, pageKey, isOpen, onToggle }) {
-  const copy = languages[lang];
-
-  return (
-    <>
-      <button
-        className={`hamburger${isOpen ? ' is-open' : ''}`}
-        onClick={onToggle}
-        type="button"
-        aria-label="Toggle menu"
-      >
-        <span className="hamburger-line" />
-        <span className="hamburger-line" />
-      </button>
-      <div className={`mobile-nav-overlay${isOpen ? ' is-open' : ''}`}>
-        {pageOrder.map((key) => (
-          <NavLink
-            key={key}
-            className={({ isActive }) => isActive ? 'is-active' : ''}
-            end={key === 'home'}
-            to={pathFor(lang, key)}
-            onClick={onToggle}
-          >
-            {copy.nav[key]}
-          </NavLink>
-        ))}
-        <a
-          href={githubUrl}
-          target="_blank"
-          rel="noreferrer"
-          onClick={onToggle}
-        >
-          {copy.nav.github}
-        </a>
-        <NavLink
-          className="mobile-nav-lang"
-          to={alternatePath(lang, pageKey)}
-          onClick={onToggle}
-        >
-          {copy.switchLabel}
-        </NavLink>
-      </div>
-    </>
-  );
-}
-
-/* ── Header ── */
 
 function Header({ lang, pageKey }) {
   const copy = languages[lang];
@@ -399,13 +223,11 @@ function Header({ lang, pageKey }) {
 
   return (
     <header className="site-header">
-      <NavLink
-        className="brand"
-        to={pathFor(lang, 'home')}
-      >
+      <NavLink className="brand" to={pathFor(lang, 'home')}>
         <span className="brand-mark">Z</span>
         <span>{copy.brandMark}</span>
       </NavLink>
+
       <nav className="site-nav">
         {pageOrder.map((key) => (
           <NavLink
@@ -417,52 +239,65 @@ function Header({ lang, pageKey }) {
             {copy.nav[key]}
           </NavLink>
         ))}
-        <a
-          className="nav-link nav-external"
-          href={githubUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a className="nav-link nav-external" href={githubUrl} rel="noreferrer" target="_blank">
           {copy.nav.github}
         </a>
       </nav>
-      <LanguageSwitch
-        lang={lang}
-        pageKey={pageKey}
-      />
-      <HamburgerMenu
-        lang={lang}
-        pageKey={pageKey}
-        isOpen={menuOpen}
-        onToggle={() => setMenuOpen((v) => !v)}
-      />
+
+      <div className="header-actions">
+        <LanguageSwitch lang={lang} pageKey={pageKey} />
+        <button
+          className={`hamburger${menuOpen ? ' is-open' : ''}`}
+          type="button"
+          aria-label="Toggle menu"
+          onClick={() => setMenuOpen((value) => !value)}
+        >
+          <span className="hamburger-line" />
+          <span className="hamburger-line" />
+        </button>
+      </div>
+
+      <div className={`mobile-nav-overlay${menuOpen ? ' is-open' : ''}`}>
+        {pageOrder.map((key) => (
+          <NavLink
+            key={key}
+            className={({ isActive }) => `mobile-link${isActive ? ' is-active' : ''}`}
+            end={key === 'home'}
+            to={pathFor(lang, key)}
+          >
+            {copy.nav[key]}
+          </NavLink>
+        ))}
+        <a className="mobile-link" href={githubUrl} rel="noreferrer" target="_blank">
+          {copy.nav.github}
+        </a>
+        <NavLink className="mobile-link mobile-nav-lang" to={alternatePath(lang, pageKey)}>
+          {copy.switchLabel}
+        </NavLink>
+      </div>
     </header>
   );
 }
 
-/* ── Footer ── */
-
 function Footer({ lang }) {
   const copy = languages[lang];
+  const shared = copy.shared;
 
   return (
     <footer className="site-footer">
-      <div>
+      <div className="footer-branding">
         <p className="footer-brand">ZenMind</p>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>{copy.home.footerTagline}</p>
+        <p className="footer-tagline">{copy.home.footerTagline}</p>
       </div>
       <div className="footer-meta">
         <p>
           {copy.footer.domain}: <a href={siteUrl}>{siteUrl}</a>
         </p>
         <p>
-          GitHub: <a href={githubUrl}>{githubUrl}</a>
+          GitHub: <a href={externalLinks.github}>{externalLinks.github}</a>
         </p>
         <p>
-          {copy.footer.installLabel}:{' '}
-          <a href={`${siteUrl}/install/mac.sh`}>mac.sh</a>,{' '}
-          <a href={`${siteUrl}/install/linux.sh`}>linux.sh</a>,{' '}
-          <a href={`${siteUrl}/install/win-wsl.sh`}>win-wsl.sh</a>
+          {shared.deployDocs}: <a href={externalLinks.deployDocs}>{externalLinks.deployDocs}</a>
         </p>
         <p>&copy; 2026 ZenMind. {copy.footer.rights}</p>
       </div>
@@ -470,88 +305,75 @@ function Footer({ lang }) {
   );
 }
 
-/* ── HomePage ── */
+function InstallCard({ entry, lang, compact = false }) {
+  const localized = entry[lang];
+  const shared = languages[lang].shared;
+
+  return (
+    <article className={`glass-card install-card${compact ? ' is-compact' : ''}`} data-reveal>
+      <div className="card-topline">
+        <PlatformIcon platform={entry.key} />
+        <div>
+          <p className="card-title">{entry.name}</p>
+          <p className="card-summary">{localized.summary}</p>
+        </div>
+      </div>
+      <CodeBlock copyText={entry.command} lang={lang}>
+        {entry.command}
+      </CodeBlock>
+      <ul className="bullet-list">
+        {localized.notes.map((note) => (
+          <li key={note}>{note}</li>
+        ))}
+      </ul>
+      <a className="text-link" href={entry.docsHref} rel="noreferrer" target="_blank">
+        {shared.openDocs}
+      </a>
+    </article>
+  );
+}
 
 function HomePage({ lang }) {
   const copy = languages[lang];
-  const typed = useTypewriter(copy.home.typewriter);
+  const kickers = copy.kickers;
 
   return (
     <>
-      {/* Section 1: Hero */}
       <section className="hero section">
-        <div
-          className="hero-copy"
-          data-reveal
-        >
+        <div className="hero-copy" data-reveal>
           <p className="eyebrow">{copy.home.eyebrow}</p>
           <h1>{copy.home.headline}</h1>
-          <div className="type-line">
-            <span>{typed}</span>
-            <span className="type-cursor" />
-          </div>
           <p className="hero-subtitle">{copy.home.subtitle}</p>
           <div className="hero-actions">
-            <MagneticButton
-              href={pathFor(lang, 'download')}
-              label={copy.home.primaryCta}
-            />
-            <MagneticButton
-              href={githubUrl}
-              label={copy.home.secondaryCta}
-              variant="secondary"
-              external
-            />
+            <ButtonLink href={pathFor(lang, 'download')} label={copy.home.primaryCta} />
+            <ButtonLink href={externalLinks.github} label={copy.home.secondaryCta} variant="secondary" external />
           </div>
-          <div className="scroll-indicator">
-            <div className="scroll-arrow" />
+        </div>
+
+        <div className="hero-panel glass-card" data-reveal>
+          <div className="section-heading hero-panel-heading">
+            <p className="section-kicker">{copy.shared.installKicker}</p>
+            <h2>{copy.home.installTitle}</h2>
+            <p>{copy.home.installBody}</p>
+          </div>
+          <div className="install-grid">
+            {installEntries.map((entry) => (
+              <InstallCard entry={entry} key={entry.key} lang={lang} compact />
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Section 2: Install Commands */}
-      <section className="section install-section">
-        <div
-          className="section-heading"
-          data-reveal
-        >
-          <p className="section-kicker">Install</p>
-          <h2>{copy.home.installTitle}</h2>
+      <section className="section">
+        <div className="section-heading" data-reveal>
+          <p className="section-kicker">{kickers.features}</p>
+          <h2>{copy.home.featuresTitle}</h2>
+          {copy.home.featuresBody ? <p>{copy.home.featuresBody}</p> : null}
         </div>
-        <div className="install-grid">
-          {copy.home.installCards.map((item, i) => (
-            <article
-              className="glass-card install-card"
-              key={item.name}
-              data-reveal
-              style={{ '--reveal-delay': `${i * 100}ms` }}
-            >
-              <PlatformIcon platform={item.platform} />
-              <p className="card-title">{item.name}</p>
-              <CodeBlock copyText={item.command}>{item.command}</CodeBlock>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* Section 3: Bento Grid */}
-      <section className="section bento-section">
-        <div
-          className="section-heading"
-          data-reveal
-        >
-          <p className="section-kicker">Capabilities</p>
-          <h2>{lang === 'zh' ? '模块化能力，灵活组合。' : 'Modular capabilities, flexible composition.'}</h2>
-        </div>
-        <div className="bento-grid">
-          {copy.home.bentoFeatures.map((feature, i) => (
-            <article
-              className={`glass-card bento-card${feature.span === 2 ? ' span-2' : ''}`}
-              key={feature.title}
-              data-reveal
-              style={{ '--reveal-delay': `${i * 80}ms` }}
-            >
-              <BentoIcon type={feature.icon} />
+        <div className="feature-grid">
+          {copy.home.featureHighlights.map((feature) => (
+            <article className="glass-card feature-card" key={feature.title} data-reveal>
+              <FeatureIcon type={feature.key} />
               <p className="card-title">{feature.title}</p>
               <p>{feature.body}</p>
             </article>
@@ -559,210 +381,108 @@ function HomePage({ lang }) {
         </div>
       </section>
 
-      {/* Section 4: Showcase */}
-      <section className="section showcase-section">
-        <div
-          className="section-heading"
-          data-reveal
-        >
-          <p className="section-kicker">Preview</p>
-          <h2>{copy.home.showcaseTitle}</h2>
+      <section className="section">
+        <div className="section-heading" data-reveal>
+          <p className="section-kicker">{kickers.quickStart}</p>
+          <h2>{copy.home.quickTitle}</h2>
+          {copy.home.quickBody ? <p>{copy.home.quickBody}</p> : null}
         </div>
-        <div
-          className="showcase-frame"
-          data-reveal
-        >
-          <div className="showcase-play">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5,3 19,12 5,21" />
-            </svg>
-          </div>
-          <p>{copy.home.showcasePlaceholder}</p>
-        </div>
-        <div
-          className="stats-row"
-          data-reveal
-        >
-          {copy.home.stats.map((stat) => (
-            <div className="stat-item" key={stat.label}>
-              <div className="stat-value">{stat.value}</div>
-              <div className="stat-label">{stat.label}</div>
-            </div>
+        <div className="steps-grid">
+          {copy.home.quickSteps.map((step, index) => (
+            <article className="glass-card step-card" key={step.title} data-reveal>
+              <span className="step-index">{String(index + 1).padStart(2, '0')}</span>
+              <p className="card-title">{step.title}</p>
+              <p>{step.body}</p>
+            </article>
           ))}
         </div>
       </section>
 
-      {/* Section 5: CTA Strip */}
-      <section className="cta-strip" data-reveal>
-        <h2>{copy.home.ctaTitle}</h2>
-        <MagneticButton
-          href={pathFor(lang, 'download')}
-          label={copy.home.ctaButton}
-        />
-        <p className="cta-links">
-          {lang === 'zh' ? '或直接访问 ' : 'Or visit '}
-          <a href={githubUrl} target="_blank" rel="noreferrer">GitHub</a>
-        </p>
+      <section className="cta-strip glass-card" data-reveal>
+        <div>
+          <p className="section-kicker">{kickers.next}</p>
+          <h2>{copy.home.ctaTitle}</h2>
+          <p>{copy.home.ctaBody}</p>
+        </div>
+        <div className="cta-actions">
+          <ButtonLink href={pathFor(lang, 'download')} label={copy.home.ctaPrimary} />
+          <ButtonLink href={externalLinks.deployDocs} label={copy.home.ctaSecondary} variant="secondary" external />
+        </div>
       </section>
     </>
   );
 }
 
-/* ── DownloadPage ── */
-
 function DownloadPage({ lang }) {
   const copy = languages[lang];
+  const shared = copy.shared;
+  const kickers = copy.kickers;
 
   return (
     <section className="section page-section">
-      <div
-        className="page-header"
-        data-reveal
-      >
-        <p className="section-kicker">Download</p>
+      <div className="page-header" data-reveal>
+        <p className="section-kicker">{kickers.download}</p>
         <h1>{copy.download.title}</h1>
         <p>{copy.download.intro}</p>
       </div>
-      <div className="card-grid download-list">
-        {copy.download.sections.map((section) => (
-          <article
-            className="glass-card download-card"
-            key={section.title}
-            data-reveal
-          >
-            <p className="card-title">{section.title}</p>
-            <p className="card-subtitle">{section.subtitle}</p>
-            <CodeBlock copyText={section.command}>{section.command}</CodeBlock>
-            <ul className="bullet-list">
-              {section.notes.map((note) => (
-                <li key={note}>{note}</li>
-              ))}
-            </ul>
-          </article>
-        ))}
-      </div>
-      <div className="card-grid dual">
-        <article
-          className="glass-card mobile-card"
-          data-reveal
-        >
-          <p className="card-title">{copy.download.mobileTitle}</p>
-          <div className="mobile-grid">
-            {copy.download.mobileCards.map((card) => (
-              <div
-                className="mobile-item"
-                key={card.platform}
-              >
-                <div className="card-row">
-                  <p style={{ margin: 0 }}>{card.platform}</p>
-                  <span className="chip chip-muted">{card.status}</span>
-                </div>
-                <p>{card.detail}</p>
-                {downloadLinks[card.hrefKey] ? (
-                  <a
-                    className="text-link"
-                    href={downloadLinks[card.hrefKey]}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    {card.cta}
-                  </a>
-                ) : (
-                  <span className="text-link">{card.cta}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </article>
-        <article
-          className="glass-card mobile-card"
-          data-reveal
-        >
-          <p className="card-title">{copy.download.sourceTitle}</p>
-          <p>{copy.download.sourceBody}</p>
-          <div className="hero-actions" style={{ justifyContent: 'flex-start' }}>
-            <MagneticButton
-              href={githubUrl}
-              label={copy.nav.github}
-              external
-            />
-          </div>
-        </article>
-      </div>
-    </section>
-  );
-}
 
-/* ── ArchitecturePage ── */
-
-function ArchitecturePage({ lang }) {
-  const copy = languages[lang];
-
-  return (
-    <section className="section page-section">
-      <div
-        className="page-header"
-        data-reveal
-      >
-        <p className="section-kicker">System</p>
-        <h1>{copy.architecture.title}</h1>
-        <p>{copy.architecture.intro}</p>
-      </div>
-      <div className="card-grid architecture-columns">
-        {copy.architecture.columns.map((column) => (
-          <article
-            className="glass-card info-card"
-            key={column.title}
-            data-reveal
-          >
-            <p className="card-title">{column.title}</p>
-            <p>{column.body}</p>
-          </article>
-        ))}
-      </div>
-      <article
-        className="glass-card timeline-card"
-        data-reveal
-      >
-        <p className="card-title">{copy.architecture.timelineTitle}</p>
-        <div className="timeline">
-          {copy.architecture.timeline.map((item, index) => (
-            <div
-              className="timeline-step"
-              key={item}
-            >
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <p>{item}</p>
-            </div>
+      <section className="section-block">
+        <div className="section-heading" data-reveal>
+          <p className="section-kicker">{shared.installKicker}</p>
+          <h2>{copy.download.installTitle}</h2>
+          {copy.download.installBody ? <p>{copy.download.installBody}</p> : null}
+        </div>
+        <div className="install-grid install-grid-wide">
+          {installEntries.map((entry) => (
+            <InstallCard entry={entry} key={entry.key} lang={lang} />
           ))}
         </div>
-      </article>
+      </section>
+
+      <div className="card-grid dual">
+        <article className="glass-card info-panel" data-reveal>
+          <p className="card-title">{copy.download.notesTitle}</p>
+          <ul className="bullet-list">
+            {copy.download.notes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        </article>
+
+        <article className="glass-card info-panel" data-reveal>
+          <p className="card-title">{copy.download.linksTitle}</p>
+          {copy.download.linksBody ? <p>{copy.download.linksBody}</p> : null}
+          <div className={`link-stack${copy.download.linksBody ? '' : ' is-compact'}`}>
+            <a className="text-link" href={externalLinks.deployDocs} rel="noreferrer" target="_blank">
+              {shared.deployDocs}
+            </a>
+            <a className="text-link" href={externalLinks.deployRepo} rel="noreferrer" target="_blank">
+              {shared.deployRepo}
+            </a>
+            <a className="text-link" href={externalLinks.github} rel="noreferrer" target="_blank">
+              {shared.sourceRepo}
+            </a>
+          </div>
+        </article>
+      </div>
     </section>
   );
 }
-
-/* ── FaqPage ── */
 
 function FaqPage({ lang }) {
   const copy = languages[lang];
+  const kickers = copy.kickers;
 
   return (
     <section className="section page-section">
-      <div
-        className="page-header"
-        data-reveal
-      >
-        <p className="section-kicker">FAQ</p>
+      <div className="page-header" data-reveal>
+        <p className="section-kicker">{kickers.faq}</p>
         <h1>{copy.faq.title}</h1>
         <p>{copy.faq.intro}</p>
       </div>
       <div className="faq-list">
         {copy.faq.items.map((item) => (
-          <details
-            className="glass-card faq-item"
-            key={item.question}
-            data-reveal
-          >
+          <details className="glass-card faq-item" key={item.question} data-reveal>
             <summary>{item.question}</summary>
             <p>{item.answer}</p>
           </details>
@@ -772,25 +492,18 @@ function FaqPage({ lang }) {
   );
 }
 
-/* ── PrivacyPage ── */
-
 function PrivacyPage({ lang }) {
   const copy = languages[lang];
+  const kickers = copy.kickers;
 
   return (
     <section className="section page-section">
-      <div
-        className="page-header"
-        data-reveal
-      >
-        <p className="section-kicker">Privacy</p>
+      <div className="page-header" data-reveal>
+        <p className="section-kicker">{kickers.privacy}</p>
         <h1>{copy.privacy.title}</h1>
         <p>{copy.privacy.intro}</p>
       </div>
-      <article
-        className="glass-card privacy-card"
-        data-reveal
-      >
+      <article className="glass-card info-panel" data-reveal>
         <ul className="bullet-list">
           {copy.privacy.points.map((point) => (
             <li key={point}>{point}</li>
@@ -801,20 +514,13 @@ function PrivacyPage({ lang }) {
   );
 }
 
-/* ── Layout & Routing ── */
-
 function PageLayout({ lang, pageKey, children }) {
   useRevealOnScroll();
   usePageMeta(lang, pageKey);
 
   return (
     <div className="app-shell">
-      <div className="page-glow page-glow-left" />
-      <div className="page-glow page-glow-right" />
-      <Header
-        lang={lang}
-        pageKey={pageKey}
-      />
+      <Header lang={lang} pageKey={pageKey} />
       <main className="content-shell">{children}</main>
       <Footer lang={lang} />
     </div>
@@ -825,16 +531,12 @@ function RoutedPage({ lang, pageKey }) {
   const pages = {
     home: <HomePage lang={lang} />,
     download: <DownloadPage lang={lang} />,
-    architecture: <ArchitecturePage lang={lang} />,
     faq: <FaqPage lang={lang} />,
     privacy: <PrivacyPage lang={lang} />,
   };
 
   return (
-    <PageLayout
-      lang={lang}
-      pageKey={pageKey}
-    >
+    <PageLayout lang={lang} pageKey={pageKey}>
       {pages[pageKey]}
     </PageLayout>
   );
@@ -855,12 +557,10 @@ function App() {
     () => [
       { path: '/', lang: 'zh', key: 'home' },
       { path: '/download', lang: 'zh', key: 'download' },
-      { path: '/architecture', lang: 'zh', key: 'architecture' },
       { path: '/faq', lang: 'zh', key: 'faq' },
       { path: '/privacy', lang: 'zh', key: 'privacy' },
       { path: '/en', lang: 'en', key: 'home' },
       { path: '/en/download', lang: 'en', key: 'download' },
-      { path: '/en/architecture', lang: 'en', key: 'architecture' },
       { path: '/en/faq', lang: 'en', key: 'faq' },
       { path: '/en/privacy', lang: 'en', key: 'privacy' },
     ],
@@ -873,26 +573,11 @@ function App() {
       <Routes>
         {routes.map((route) => (
           <Route
-            element={
-              <RoutedPage
-                key={`${route.lang}-${route.key}`}
-                lang={route.lang}
-                pageKey={route.key}
-              />
-            }
-            key={route.path}
+            key={`${route.lang}-${route.key}`}
             path={route.path}
+            element={<RoutedPage lang={route.lang} pageKey={route.key} />}
           />
         ))}
-        <Route
-          element={
-            <RoutedPage
-              lang="zh"
-              pageKey="home"
-            />
-          }
-          path="*"
-        />
       </Routes>
     </>
   );

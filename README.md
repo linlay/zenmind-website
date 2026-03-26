@@ -1,39 +1,40 @@
 # ZenMind Website
 
-ZenMind 官网仓库，用于构建并发布 `www.zenmind.cc` 公网品牌站。
+ZenMind 官网仓库，用于构建并发布 `www.zenmind.cc` 的双语静态品牌站。
 
-## 1. 项目简介
+## 1. 项目定位
 
-这是 ZenMind 的网站端项目，定位为一个面向公网发布的双语静态官网，负责：
+`zenmind-website` 现在只负责官网展示，不再负责安装脚本源码、release 产物生成、Nginx 部署配置或服务器部署编排。
 
-- 品牌展示
-- 下载分发入口
-- GitHub 导流
-- 官网级隐私与 FAQ 页面
-- 提供 `/install/*.sh` 一键 bootstrap 脚本
+当前职责边界：
 
-当前网站主域名约定为：
+- 官网首页与下载页展示
+- 中英文双语路由
+- FAQ 与隐私页
+- GitHub 与官方 deploy 入口引导
 
-- `https://www.zenmind.cc`：官网主入口
-- `https://zenmind.cc`：301 跳转到 `www`
+不负责的内容：
 
-根域名只承载官网，不承载业务 API。未来产品入口应通过子域名承载，例如 `app.zenmind.cc`、`api.zenmind.cc`。
+- `/install/*.sh` 脚本源码维护
+- release manifest / index 生成
+- Docker / Compose / Nginx 部署资产
+- 服务器发布与部署
 
-## 2. 快速开始
+以上发布与部署相关流程统一由 `zenmind-deploy` 负责。
+
+## 2. 本地开发
 
 ### 前置要求
 
 - Node.js 20+
 - npm 10+
 
-### 本地启动
+### 启动开发环境
 
 ```bash
 npm install
 npm run dev
 ```
-
-默认使用 Vite 本地开发服务器。
 
 ### 生产构建
 
@@ -43,203 +44,76 @@ npm run build
 
 构建产物输出到 `dist/`。
 
-### 当前页面路由
+## 3. 当前路由
 
-- 中文：
-  - `/`
-  - `/download`
-  - `/architecture`
-  - `/faq`
-  - `/privacy`
-- English:
-  - `/en`
-  - `/en/download`
-  - `/en/architecture`
-  - `/en/faq`
-  - `/en/privacy`
+中文：
 
-### 官网安装脚本
+- `/`
+- `/download`
+- `/faq`
+- `/privacy`
 
-构建后会一起发布以下静态脚本：
+English:
 
-- `/install/mac.sh`
-- `/install/linux.sh`
-- `/install/win-wsl.sh`
+- `/en`
+- `/en/download`
+- `/en/faq`
+- `/en/privacy`
 
-脚本行为：
+## 4. 内容与数据维护
 
-- 默认安装目录为 `$HOME/zenmind`
-- 若目录不存在则 shallow clone `https://github.com/linlay/zenmind.git`
-- 若目录已存在则执行 `git pull --ff-only`
-- 然后先执行环境检查，再转交到正式安装脚本：
-  - `./setup-mac.sh`
-  - `./setup-linux.sh`
-  - `./setup-win-wsl.sh`
-- 默认读取 `https://www.zenmind.cc/install/manifest.json`
-- 若设置 `ZENMIND_RELEASE_LINE=vX.Y`，则改用 `/install/releases/vX.Y/release-manifest.json`
-- 若设置 `ZENMIND_MANIFEST_URL`，则直接使用该 manifest URL
+当前前端事实源集中在以下文件：
 
-## 3. 配置说明
+- `src/site-data.js`
+  - 维护路由映射
+  - 维护官网文案
+  - 维护 `externalLinks` 与 `installEntries`
+- `src/App.jsx`
+  - 维护页面结构、路由映射与复用组件
+- `src/styles.css`
+  - 维护字体、配色、布局、响应式与动效
 
-本仓库当前是纯静态品牌站，不依赖必须填写的运行时环境变量。
+安装入口策略：
 
-- 根目录 `.env.example` 仅作为未来扩展保留位与约定说明
-- 当前前端代码未消费任何 `VITE_*` 变量
-- Android APK 与 iOS App Store 链接当前仍为占位
-- 若后续接入真实移动端下载地址，建议优先将链接收敛到前端单一配置文件或明确的环境变量契约，不要分散维护
+- 官网仍展示 macOS、Linux、Windows (WSL) 的安装命令
+- 首页与下载页复用同一份 `installEntries`
+- 官网只展示命令与说明，不再把这些脚本作为仓库产物维护
 
-当前关键事实文件：
+## 5. 与 zenmind-deploy 的关系
 
-- 使用说明与部署说明：`README.md`
-- 项目事实与架构：`CLAUDE.md`
-- 官网 Nginx 示例：`deploy/nginx/zenmind.cc.conf`
-- 前端文案与路由数据：`src/site-data.js`
+官网与部署仓库的协作方式如下：
 
-## 4. 部署
+- `zenmind-website` 负责公开页面与品牌表达
+- `zenmind-deploy` 负责安装脚本生成、release 产物、官网静态发布和服务器部署
+- 当安装入口或 deploy 流程变化时，官网只需要更新文案与链接常量
 
-### 静态站部署
+当前代码中为 deploy 预留了统一入口：
 
-```bash
-npm install
-npm run build
-```
+- `externalLinks.deployDocs`
+- `externalLinks.deployRepo`
 
-将 `dist/` 发布到服务器静态目录，例如：
+如果后续 deploy 的公开入口地址变化，只需修改 `src/site-data.js` 中对应常量。
 
-```bash
-/var/www/zenmind.cc/current/dist
-```
+## 6. 开发约定
 
-### Nginx 配置
+- 新增或修改官网文案时，优先更新 `src/site-data.js`
+- 保持首页主导的信息结构，不再恢复独立 `Architecture` 页面
+- 官网只负责说明和引导，不要把 deploy 逻辑重新带回本仓库
+- 动效需兼容 `prefers-reduced-motion`
+- 修改页面后至少执行一次 `npm run build`
 
-项目已提供参考配置：
+## 7. 验证建议
 
-- `deploy/nginx/zenmind.cc.conf`
-
-部署说明见：
-
-- `deploy/nginx/README.md`
-
-当前约定：
-
-- `80` 全量跳转到 `https://www.zenmind.cc`
-- `443` 承载静态站
-- `/assets/*` 长缓存
-- `/install/*.sh` 不缓存，直接输出 shell 脚本
-- `/install/manifest.json` 直出稳定版 manifest
-- `/install/releases/*` 直出 release line 与 patch 产物
-- `/api/*` 返回 `404`
-- 其他路径使用 SPA 回退到 `index.html`
-
-### 证书
-
-Nginx 配置默认按 Certbot 路径示例编写：
-
-- `/etc/letsencrypt/live/www.zenmind.cc/fullchain.pem`
-- `/etc/letsencrypt/live/www.zenmind.cc/privkey.pem`
-
-如服务器路径不同，请按实际环境调整。
-
-## 5. 运维
-
-### 常用命令
+发布前建议检查：
 
 ```bash
 npm run build
-bash -n public/install/mac.sh
-bash -n public/install/linux.sh
-bash -n public/install/win-wsl.sh
-```
-
-### 常见排查
-
-- 页面刷新 404：
-  - 检查 Nginx 是否使用了 `try_files $uri $uri/ /index.html;`
-- `/install/*.sh` 无法访问：
-  - 检查构建产物中是否已包含 `dist/install/`
-  - 检查 Nginx 是否对 `/install/` 单独放行
-- `/install/manifest.json` 或 `/install/releases/*` 无法访问：
-  - 检查宿主机是否已提供 `/docker/zenmind-releases`
-  - 检查宿主机 Nginx 是否对这些路径做了直连映射，而不是只反代到网站容器
-- 官网访问到 `/api/*`：
-  - 这是预期行为，根域名不承载 API
-- Android / iOS 仍在次级区：
-  - 这是当前预期，主入口以 macOS、Linux、Windows (WSL) 一键安装为主
-- 样式或路由变更没有生效：
-  - 重新执行 `npm run build`
-  - 检查服务器是否部署了最新 `dist/`
-
-### 发布前建议检查
-
-```bash
-npm run build
-nginx -t
 ```
 
 确认：
 
-- `dist/install/*.sh` 已生成
-- `dist/404.html` 与 `dist/50x.html` 已生成
-- 中英文路由在刷新场景下可正常访问
+- 中英文 8 个页面入口可构建
+- 首页首屏能直接看到三平台安装命令
+- Download 页能清楚展示官网与 deploy 的职责分离
 
-### Docker Compose 部署
-
-项目现在也支持容器化部署，适合挂在宿主机 Nginx 后面。
-
-新增文件：
-
-- `Dockerfile`
-- `compose.yml`
-- `deploy/nginx/container.conf`
-- `deploy/nginx/zenmind.cc.compose-proxy.conf`
-
-推荐服务器目录：
-
-```bash
-/docker/zenmind-website
-```
-
-启动方式：
-
-```bash
-docker compose build
-docker compose up -d
-```
-
-当前约定：
-
-- 容器内由 Nginx 提供静态站
-- 宿主机仅监听本机回环地址：
-  - `127.0.0.1:11940 -> container:80`
-- 宿主机现有 Nginx 反代到：
-  - `http://127.0.0.1:11940`
-
-宿主机 Nginx 若采用反代版本，可参考：
-
-- `deploy/nginx/zenmind.cc.compose-proxy.conf`
-
-## 6. FAQ
-
-### 这是内容站还是产品站？
-
-当前是官网与下载入口，不是产品后台。
-
-### 为什么根域名不挂 API？
-
-这是有意的边界设计。官网只做品牌和分发，业务入口后续走独立子域名，避免路由职责混乱。
-
-### 现在可以直接发到线上吗？
-
-可以。当前仓库已经具备：
-
-- 本地开发
-- 生产构建
-- 静态错误页
-- 安装脚本静态输出
-- Nginx 参考配置
-
-剩余待补的主要是：
-
-- Android APK 真实地址
-- iOS App Store 真实地址
 # zenmind-website
