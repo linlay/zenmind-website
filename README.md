@@ -47,9 +47,9 @@ npm run build
 
 构建产物输出到 `dist/`。
 
-登录页默认通过 `VITE_API_BASE=/api` 调用后端。容器部署时，项目内的 nginx 会把普通 `/api` 代理到共享 Docker 网络里的 `zenmind-official-server:8080`，并只对 `/api/auth/sso/session` 和 `/api/auth/desktop-sso/start` 启用 authentik forward auth。
+登录页默认通过 `VITE_API_BASE=/api` 调用后端。容器部署时，项目内的 nginx 会把普通 `/api` 代理到共享 Docker 网络里的 `zenmind-official-server:8080`。Google、邮箱验证码和 Desktop Broker 均走官网第一方认证；`/api/auth/sso/session` 的 authentik forward-auth 只在兼容观察期作为回滚桥保留。
 
-生产 canonical host 是 `www.zenmind.cc`。裸域 `zenmind.cc` 只作为入口保留，nginx 会用 `308` 跳转到 `https://www.zenmind.cc$request_uri`，确保 SSO 只匹配 authentik 的 `https://www.zenmind.cc` Provider。
+生产 canonical host 是 `www.zenmind.cc`。裸域 `zenmind.cc` 只作为入口保留，nginx 会用 `308` 跳转到 `https://www.zenmind.cc$request_uri`，使 host-only Session Cookie 和 OIDC Issuer 始终保持单一来源。
 
 ### 容器部署
 
@@ -66,7 +66,7 @@ docker compose up --build
 WEBSITE_PORT=8081 docker compose up --build
 ```
 
-生产部署需要设置 `SSO_BRIDGE_TOKEN`，并与后端服务的同名变量保持一致。如果 authentik outpost 不在默认的 `http://authentik-server:9000`，通过 `AUTHENTIK_OUTPOST_UPSTREAM` 覆盖：
+兼容观察期需要设置 `SSO_BRIDGE_TOKEN`，并与后端服务的同名变量保持一致。如果 authentik outpost 不在默认的 `http://authentik-server:9000`，通过 `AUTHENTIK_OUTPOST_UPSTREAM` 覆盖。稳定观察结束并关闭回滚桥后，应从 compose 和 nginx 一并删除这些变量与路由：
 
 ```bash
 SSO_BRIDGE_TOKEN=<shared-secret> AUTHENTIK_OUTPOST_UPSTREAM=http://authentik-server:9000 docker compose up --build
@@ -96,6 +96,8 @@ English:
 
 - `/market/`
 - `/market/?lang=en`
+- `/market/api/*` 先进入官网 Cookie/JWT 网关
+- `/market/npm/*` 与 `/market/artifacts/*` 公开直连 Market 服务
 
 ## 4. 内容与数据维护
 
