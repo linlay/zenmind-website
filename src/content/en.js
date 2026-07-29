@@ -320,7 +320,7 @@ export const en = {
       intro: 'Continue through ZenMind unified authentication.',
       portalTitle: 'Login to ZenMind',
       portalBody: 'Continue through ZenMind unified authentication.',
-      highlights: ['Unified SSO', 'Google via authentik', 'Secure session'],
+      highlights: ['Unified SSO', 'Google and email code', 'Secure session'],
       formTitle: 'Email code sign-in',
       emailLabel: 'Email',
       codeLabel: '6-digit code',
@@ -350,7 +350,7 @@ export const en = {
       providerLabel: 'Method',
       logout: 'Log out',
       sessionTitle: 'Secure sign-in',
-      sessionBody: 'ZenMind uses authentik for single sign-on while the public website remains open.',
+      sessionBody: 'ZenMind provides first-party authentication. Credentials remain in a secure HttpOnly session cookie.',
       errorFallback: 'Request failed. Please try again.',
     },
     profile: {

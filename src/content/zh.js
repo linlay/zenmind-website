@@ -318,7 +318,7 @@ export const zh = {
       intro: '通过 ZenMind 统一认证继续。',
       portalTitle: '登录 ZenMind',
       portalBody: '通过 ZenMind 统一认证继续。',
-      highlights: ['统一 SSO', 'authentik 接入 Google', '安全会话'],
+      highlights: ['统一 SSO', 'Google 与邮箱验证码', '安全会话'],
       formTitle: '邮箱验证码登录',
       emailLabel: '邮箱',
       codeLabel: '6 位验证码',
@@ -348,7 +348,7 @@ export const zh = {
       providerLabel: '登录方式',
       logout: '退出登录',
       sessionTitle: '安全登录',
-      sessionBody: 'ZenMind 使用 authentik 提供单点登录，同时官网公开页面保持开放。',
+      sessionBody: 'ZenMind 直接提供统一认证。登录凭据只保存在安全的 HttpOnly 会话 Cookie 中。',
       errorFallback: '请求失败，请稍后重试。',
     },
     profile: {

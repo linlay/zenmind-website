@@ -22,7 +22,7 @@ export function useAuthSession() {
   const logout = useCallback(async () => {
     setError('');
     try {
-      await apiRequest('/auth/logout', { method: 'POST', body: '{}' });
+      await apiRequest('/auth/logout', { method: 'POST', body: '{}', csrf: true });
       setUser(null);
       return true;
     } catch (err) {
